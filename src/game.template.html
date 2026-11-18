@@ -40,10 +40,10 @@ html,body{margin:0;height:100%;background:#3b2a8a;color:#1b1330;
   height:38px;padding:0 13px;display:flex;align-items:center;gap:6px;cursor:pointer;flex:none}
 #btnHall:active{transform:translateY(3px);box-shadow:0 1px 0 #1b1330}
 #btnHall svg{stroke:#1b1330}
-#banner{text-align:left;color:#4a3b78;font-weight:700;font-size:min(13.5px,calc((100vw - 70px) / 22));line-height:1.45;white-space:nowrap;padding:0 2px;margin:0}
+#banner{position:absolute;left:12px;top:8px;text-align:left;color:#4a3b78;font-weight:700;font-size:min(13.5px,calc((100vw - 70px) / 22));line-height:1.45;white-space:nowrap;padding:0 2px;margin:0}
 #stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:4px 8px 6px}
 #game{display:block;touch-action:none;border-radius:20px;box-shadow:0 5px 0 #1b1330}
-#legcard{flex:none;width:calc(100% - 24px);max-width:496px;padding:8px 10px 6px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));
+#legcard{position:relative;flex:none;width:calc(100% - 24px);max-width:496px;padding:8px 10px 6px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));
   background:#fff3cf;border:3.5px solid #1b1330;border-radius:18px;box-shadow:0 4px 0 #1b1330;box-sizing:border-box}
 #legend{--u:30px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px}
 #legend .it{flex:none;width:var(--u);display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
@@ -432,7 +432,7 @@ function makeSprite(def) {
   return { ext: def.ext, back: back.cv, art: art.cv, front: front.cv };
 }
 var sprites = BODIES.map(makeSprite);
-window.__bhReady = function () { sprites[LAST] = makeSprite(BODIES[LAST]); if (LEGEND_CV[LAST]) drawIcon(LEGEND_CV[LAST], LAST); };
+window.__bhReady = function () { sprites[LAST] = makeSprite(BODIES[LAST]); if (LEGEND_CV[LAST]) drawIcon(LEGEND_CV[LAST], LAST); if (window.placeNote) placeNote(); };
 // 한 천체를 그린다: (x, y) 중심, ang 회전(무늬만), s 크기 배율
 function drawBody(c, level, x, y, ang, s) {
   var def = BODIES[level], sp = sprites[level], E = def.ext * def.r;
@@ -484,8 +484,43 @@ function layoutLegend() {
   lg.style.setProperty('--u', u.toFixed(2) + 'px');
   var its = lg.children;
   for (i = 0; i < its.length; i++) its[i].style.width = (LEGEND_C[i] * u).toFixed(2) + 'px';
+  placeNote();
+}
+// 안내 문구를 천체 그림과 겹치지 않는 선에서 최대한 아래로 내린다(작은 천체 위 빈 공간 활용).
+window.placeNote = placeNote;
+function placeNote() {
+  var card = document.getElementById('legcard'), nb = document.getElementById('banner'), lg = document.getElementById('legend');
+  if (!card || !nb || !lg) return;
+  var PAD = 8, GAP = 2, i, j;
+  card.style.paddingTop = PAD + 'px'; nb.style.top = PAD + 'px';
+  var cr = card.getBoundingClientRect(), nr = nb.getBoundingClientRect(), th = nr.height;
+  var lines = nb.children, tops = [], vis = [];
+  var cvs = lg.querySelectorAll('canvas');
+  for (i = 0; i < cvs.length; i++) {
+    var c = cvs[i], b = c.getBoundingClientRect(), t = 0;
+    try {
+      var d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, w = c.width, h = c.height, f = false;
+      for (var y = 0; y < h && !f; y++) for (var x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 20) { t = y; f = true; break; }
+      t = t * b.height / h;
+    } catch (e) { t = 0; }
+    vis.push({ l: b.left, r: b.right, top: b.top + t });
+  }
+  // 줄별로: 그 줄의 글자 폭 아래에 있는 천체들의 가장 높은 지점
+  var limit = Infinity, acc = 0;
+  for (j = 0; j < lines.length; j++) {
+    var rg = document.createRange(); rg.selectNodeContents(lines[j]);
+    var rr = rg.getBoundingClientRect(), lineBottom = rr.bottom - nr.top; // 문구 상단 기준 줄 하단
+    var m = Infinity;
+    for (i = 0; i < vis.length; i++) if (vis[i].l < rr.right + 2 && vis[i].r > rr.left - 2) m = Math.min(m, vis[i].top);
+    if (m < Infinity) limit = Math.min(limit, m - cr.top - card.clientTop - GAP - lineBottom); // 문구 top 허용 최대값
+  }
+  var top = isFinite(limit) ? limit : PAD;
+  if (top < PAD) { card.style.paddingTop = (PAD + (PAD - top)) + 'px'; top = PAD; }
+  nb.style.top = Math.round(top * 10) / 10 + 'px';
 }
 window.addEventListener('resize', layoutLegend);
+window.addEventListener('load', function () { layoutLegend(); setTimeout(layoutLegend, 400); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { layoutLegend(); });
 
 function makeBg() {
   bgCanvas.width = canvas.width; bgCanvas.height = canvas.height;
