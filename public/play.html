@@ -4,32 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#05060f">
+<meta name="theme-color" content="#3b2a8a">
 <title>우주 합치기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:#05060f;color:#e8ecff;
-  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+html,body{margin:0;height:100%;background:#3b2a8a;color:#1b1330;
+  font-family:'Jua',-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
   -webkit-tap-highlight-color:transparent}
 .hidden{display:none!important}
 .screen{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center;padding:24px}
 #cover{background:#fff;z-index:9000;color:#b8b8b8;font-size:13px}
-#lobby{background:radial-gradient(120% 70% at 50% 0%,#121638 0%,#05060f 60%)}
-h1{margin:0;font-size:34px}
-.note{color:#8f9ad6;font-size:14px;line-height:1.55;max-width:340px;margin:8px 0}
-.btn{display:inline-block;font:inherit;font-size:18px;font-weight:700;border:0;border-radius:999px;padding:14px 34px;
-  background:#ffd54a;color:#05060f;text-decoration:none;margin-top:14px}
-.btn:active{transform:scale(.97)}
+#lobby{background:
+  radial-gradient(circle at 12% 18%,#ffe9a8 0 2px,transparent 3px),radial-gradient(circle at 80% 12%,#ffe9a8 0 2px,transparent 3px),
+  radial-gradient(circle at 30% 70%,#ffe9a8 0 1.5px,transparent 2.5px),radial-gradient(circle at 90% 80%,#ffe9a8 0 2px,transparent 3px),
+  radial-gradient(circle at 55% 40%,#ffe9a8 0 1.5px,transparent 2.5px),radial-gradient(120% 80% at 50% 0%,#5b43c4 0%,#3b2a8a 55%,#261a63 100%);}
+.card{background:#fff3cf;border:3.5px solid #1b1330;border-radius:24px;box-shadow:0 6px 0 #1b1330;padding:30px 28px 28px;max-width:340px;width:100%}
+.planets{display:flex;justify-content:center;align-items:flex-end;gap:6px;margin-bottom:12px}
+.planets i{display:block;border-radius:50%;border:3px solid #1b1330}
+h1{margin:0;font-size:36px;font-weight:400}
+.note{color:#4a3b78;font-size:16px;line-height:1.55;margin:10px 0 0}
+.btn{display:inline-block;font:inherit;font-size:22px;border:3.5px solid #1b1330;border-radius:18px;padding:12px 34px;
+  background:#ffd23f;color:#1b1330;text-decoration:none;margin-top:20px;box-shadow:0 4px 0 #1b1330}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #1b1330}
 </style>
 </head>
 <body>
 <!-- 운영 중이 서버에서 확인되기 전에는 흰 화면으로 덮는다 -->
 <div id="cover" class="screen"><span id="coverMsg"></span></div>
 <div id="lobby" class="screen hidden">
-  <h1>우주 합치기</h1>
-  <p class="note">같은 천체 두 개를 합쳐 더 큰 천체로 키우세요.<br>달에서 시작해 은하까지!</p>
-  <a id="enter" class="btn" href="/game">게임으로 이동</a>
+  <div class="card">
+    <div class="planets"><i style="width:18px;height:18px;background:#bdbab4"></i><i style="width:24px;height:24px;background:#c4764a"></i><i style="width:32px;height:32px;background:#2f6db5"></i><i style="width:40px;height:40px;background:#e3cfb2"></i><i style="width:50px;height:50px;background:#ffc93c"></i></div>
+    <h1>우주 합치기</h1>
+    <p class="note">같은 천체 두 개를 합쳐 더 큰 천체로 키우세요.<br>달에서 시작해 블랙홀까지!</p>
+    <a id="enter" class="btn" href="/game">게임으로 이동</a>
+  </div>
 </div>
 <script>
 (function () {

@@ -4,56 +4,65 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#05060f">
+<meta name="theme-color" content="#3b2a8a">
 <title>운영 관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&display=swap">
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:#05060f;color:#e8ecff;
-  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+html,body{margin:0;min-height:100%;background:#3b2a8a;color:#1b1330;
+  font-family:'Jua',-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
   -webkit-tap-highlight-color:transparent}
-body{min-height:100vh;display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 20px 40px;
-  background:radial-gradient(120% 70% at 50% 0%,#121638 0%,#05060f 60%)}
-h1{margin:0 0 6px;font-size:26px}
-h2{margin:0 0 8px;font-size:17px}
-.note{color:#8f9ad6;font-size:13px;line-height:1.55;max-width:360px;margin:6px 0}
-.pill{display:inline-block;padding:6px 18px;border-radius:999px;font-weight:700;font-size:15px;margin:12px 0 4px}
-.pill.on{background:#1f7a46;color:#d6ffe6}
-.pill.off{background:#3a3f66;color:#cdd3ff}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 16px 40px;
+  background:
+  radial-gradient(circle at 12% 18%,#ffe9a8 0 2px,transparent 3px),radial-gradient(circle at 80% 12%,#ffe9a8 0 2px,transparent 3px),
+  radial-gradient(circle at 30% 70%,#ffe9a8 0 1.5px,transparent 2.5px),radial-gradient(circle at 90% 80%,#ffe9a8 0 2px,transparent 3px),
+  radial-gradient(circle at 55% 40%,#ffe9a8 0 1.5px,transparent 2.5px),radial-gradient(120% 80% at 50% 0%,#5b43c4 0%,#3b2a8a 55%,#261a63 100%)}
+h1{margin:0 0 6px;font-size:30px;font-weight:400;color:#fff3cf;text-shadow:0 3px 0 #1b1330}
+h2{margin:0 0 8px;font-size:20px;font-weight:400}
+.card{background:#fff3cf;border:3.5px solid #1b1330;border-radius:24px;box-shadow:0 6px 0 #1b1330;padding:18px 20px 20px;width:100%;max-width:400px;margin-top:16px}
+.note{color:#4a3b78;font-size:15px;line-height:1.5;margin:6px 0}
+.top-note{color:#e6dcff;font-size:14px;line-height:1.5;max-width:360px;margin:6px 0}
+.pill{display:inline-block;padding:5px 20px;border:3px solid #1b1330;border-radius:999px;font-size:18px;margin:6px 0 4px}
+.pill.on{background:#7be0a4;color:#1b1330}
+.pill.off{background:#fff;color:#4a3b78}
 .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}
-.btn{font:inherit;font-size:17px;font-weight:700;border:0;border-radius:999px;padding:13px 30px;cursor:pointer;min-width:150px;
-  text-decoration:none;display:inline-block}
-.btn.go{background:#ffd54a;color:#05060f}
-.btn.stop{background:#ff6b6b;color:#fff}
-.btn.sub{background:#2a3068;color:#dfe4ff}
-.btn.danger{background:transparent;color:#ff9a9a;border:1px solid #ff6b6b;font-size:15px;padding:10px 22px;min-width:0}
-.btn:disabled{opacity:.35;cursor:default}
-.btn:active:not(:disabled){transform:scale(.97)}
-input{font:inherit;font-size:16px;padding:11px 14px;border-radius:10px;border:1px solid #2c3470;background:#0d1030;color:#e8ecff;width:260px;max-width:100%;text-align:center}
-input:disabled{opacity:.5}
-label.f{display:block;font-size:13px;color:#aab3ea;margin:10px 0 6px}
-code{background:#12163a;border:1px solid #2c3470;border-radius:8px;padding:4px 8px;font-size:13px;word-break:break-all;user-select:all}
-.err{color:#ff9a9a}
+.btn{font:inherit;font-size:19px;border:3.5px solid #1b1330;border-radius:18px;padding:11px 24px;cursor:pointer;min-width:140px;
+  text-decoration:none;display:inline-block;color:#1b1330;box-shadow:0 4px 0 #1b1330}
+.btn.go{background:#ffd23f}
+.btn.stop{background:#ff7a7a}
+.btn.sub{background:#fff}
+.btn.danger{background:#fff;color:#c0322e;font-size:16px;padding:9px 20px;min-width:0}
+.btn:disabled{opacity:.4;cursor:default;box-shadow:0 2px 0 #1b1330}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 #1b1330}
+input{font:inherit;font-size:18px;padding:10px 14px;border-radius:14px;border:3.5px solid #1b1330;background:#fff;color:#1b1330;width:100%;max-width:280px;text-align:center}
+input:disabled{opacity:.55}
+label.f{display:block;font-size:15px;color:#4a3b78;margin:10px 0 6px}
+code{background:#fff;border:2.5px solid #1b1330;border-radius:10px;padding:4px 8px;font-size:13px;word-break:break-all;user-select:all;font-family:inherit}
+.err{color:#c0322e}
 .hidden{display:none!important}
-.sec{width:100%;max-width:380px;margin-top:22px;padding-top:18px;border-top:1px solid #232a63}
+.sec{margin-top:22px;padding-top:16px;border-top:3px dashed #1b1330}
 ol.hall{list-style:none;margin:8px 0;padding:0;text-align:left}
-ol.hall li{display:flex;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid #232a63;font-size:15px}
-ol.hall .rk{flex:none;width:24px;text-align:center;font-weight:800;color:#8f9ad6}
-ol.hall li:first-child .rk{color:#ffd54a}
+ol.hall li{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:2px dashed rgba(27,19,48,.35);font-size:17px}
+ol.hall .rk{flex:none;width:28px;text-align:center;color:#4a3b78}
+ol.hall li:first-child .rk{color:#e08a00}
 ol.hall .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-ol.hall .nm small{display:block;font-size:11px;color:#8f9ad6}
-ol.hall li.live .nm small{color:#7be0a4}
-ol.hall .pt{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
-.empty{color:#8f9ad6;font-size:14px;padding:14px 0}
-#mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(3,4,12,.8);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
-#dlg{background:#12163a;border:1px solid #2c3470;border-radius:16px;padding:22px 24px;max-width:340px;width:100%}
-#dlg p{margin:6px 0 0;font-size:14px;line-height:1.55;color:#c5ccf5}
+ol.hall .nm small{display:block;font-size:12px;color:#6b5c9a}
+ol.hall li.live .nm small{color:#1f8a52}
+ol.hall .pt{flex:none;font-variant-numeric:tabular-nums}
+.empty{color:#6b5c9a;font-size:15px;padding:14px 0}
+#mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(27,19,48,.72);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
+#dlg{background:#fff3cf;border:3.5px solid #1b1330;border-radius:24px;box-shadow:0 6px 0 #1b1330;padding:22px 24px;max-width:340px;width:100%}
+#dlg p{margin:6px 0 0;font-size:15px;line-height:1.55;color:#4a3b78}
 #dlg .row{margin:18px 0 0}
-#dlg .btn{min-width:0;flex:1;padding:12px 0;font-size:16px}
+#dlg .btn{min-width:0;flex:1;padding:10px 0;font-size:18px}
 </style>
 </head>
 <body>
 <h1>운영 관리</h1>
-<p class="note">이 주소는 참가자에게 공유하지 마세요. 참가자에게는 아래의 게임 페이지 주소만 알려 주세요.</p>
+<p class="top-note">이 주소는 참가자에게 공유하지 마세요. 참가자에게는 아래의 게임 페이지 주소만 알려 주세요.</p>
+<div class="card">
 <div id="pill" class="pill off">확인 중…</div>
 <p id="cur" class="note"></p>
 
@@ -67,8 +76,9 @@ ol.hall .pt{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
 <p id="msg" class="note"></p>
 <p class="note">게임 페이지 주소<br><code id="playUrl"></code></p>
 <div class="row"><a id="preview" class="btn sub" href="/play" target="_blank" rel="noopener">게임 페이지 보기</a></div>
+</div>
 
-<div class="sec">
+<div class="card">
   <h2>역대 최고기록 (상위 10)</h2>
   <div id="hallBody"><div class="empty">불러오는 중…</div></div>
   <div class="row"><button id="btnClear" class="btn danger" type="button" disabled>역대기록 지우기</button></div>
