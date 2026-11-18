@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#05060f">
+<title>우주 합치기</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#05060f;color:#e8ecff;
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  -webkit-tap-highlight-color:transparent}
+.hidden{display:none!important}
+.screen{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:24px}
+#cover{background:#fff;z-index:9000;color:#b8b8b8;font-size:13px}
+#lobby{background:radial-gradient(120% 70% at 50% 0%,#121638 0%,#05060f 60%)}
+h1{margin:0;font-size:34px}
+.note{color:#8f9ad6;font-size:14px;line-height:1.55;max-width:340px;margin:8px 0}
+.btn{display:inline-block;font:inherit;font-size:18px;font-weight:700;border:0;border-radius:999px;padding:14px 34px;
+  background:#ffd54a;color:#05060f;text-decoration:none;margin-top:14px}
+.btn:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+<!-- 운영 중이 서버에서 확인되기 전에는 흰 화면으로 덮는다 -->
+<div id="cover" class="screen"><span id="coverMsg"></span></div>
+<div id="lobby" class="screen hidden">
+  <h1>우주 합치기</h1>
+  <p class="note">같은 천체 두 개를 합쳐 더 큰 천체로 키우세요.<br>달에서 시작해 은하까지!</p>
+  <a id="enter" class="btn" href="/game">게임으로 이동</a>
+</div>
+<script>
+(function () {
+'use strict';
+var cover = document.getElementById('cover'), coverMsg = document.getElementById('coverMsg'), lobby = document.getElementById('lobby');
+var POLL = Math.max(500, parseInt(new URLSearchParams(location.search).get('poll') || '3000', 10) || 3000);
+var MAX_FAILS = 2, fails = 0;
+document.getElementById('enter').href = '/game' + location.search;
+
+function render(open, msg) {
+  if (open) { cover.classList.add('hidden'); lobby.classList.remove('hidden'); }
+  else { cover.classList.remove('hidden'); lobby.classList.add('hidden'); coverMsg.textContent = msg || ''; }
+}
+function check() {
+  fetch('/api/status', { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.json();
+  }).then(function (s) {
+    fails = 0;
+    if (s && s.open === true) render(true); else render(false, '현재 운영 중이 아닙니다');
+  }).then(null, function () {
+    fails++;
+    if (fails >= MAX_FAILS) render(false, '연결할 수 없습니다');
+  });
+}
+check();
+setInterval(check, POLL);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#05060f">
+<title>운영 관리</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#05060f;color:#e8ecff;
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  -webkit-tap-highlight-color:transparent}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;
+  background:radial-gradient(120% 70% at 50% 0%,#121638 0%,#05060f 60%)}
+h1{margin:0 0 6px;font-size:26px}
+.note{color:#8f9ad6;font-size:13px;line-height:1.55;max-width:360px;margin:6px 0}
+.pill{display:inline-block;padding:6px 18px;border-radius:999px;font-weight:700;font-size:15px;margin:12px 0}
+.pill.on{background:#1f7a46;color:#d6ffe6}
+.pill.off{background:#3a3f66;color:#cdd3ff}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+.btn{font:inherit;font-size:17px;font-weight:700;border:0;border-radius:999px;padding:13px 30px;cursor:pointer;min-width:150px;
+  text-decoration:none;display:inline-block}
+.btn.go{background:#ffd54a;color:#05060f}
+.btn.stop{background:#ff6b6b;color:#fff}
+.btn.sub{background:#2a3068;color:#dfe4ff}
+.btn:disabled{opacity:.35;cursor:default}
+.btn:active:not(:disabled){transform:scale(.97)}
+input{font:inherit;font-size:16px;padding:10px 14px;border-radius:10px;border:1px solid #2c3470;background:#0d1030;color:#e8ecff;width:220px;text-align:center}
+code{background:#12163a;border:1px solid #2c3470;border-radius:8px;padding:4px 8px;font-size:13px;word-break:break-all;user-select:all}
+.err{color:#ff9a9a}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<h1>운영 관리</h1>
+<p class="note">이 주소는 참가자에게 공유하지 마세요. 참가자에게는 아래의 게임 페이지 주소만 알려 주세요.</p>
+<div id="pill" class="pill off">확인 중…</div>
+<div id="keyRow" class="row hidden"><input id="key" type="password" placeholder="관리 키" autocomplete="off"></div>
+<div class="row">
+  <button id="btnStart" class="btn go" type="button" disabled>운영 시작</button>
+  <button id="btnStop" class="btn stop" type="button" disabled>운영 종료</button>
+</div>
+<p id="msg" class="note"></p>
+<p class="note">게임 페이지 주소<br><code id="playUrl"></code></p>
+<div class="row"><a id="preview" class="btn sub" href="/play" target="_blank" rel="noopener">게임 페이지 보기</a></div>
+<script>
+(function () {
+'use strict';
+function $(id) { return document.getElementById(id); }
+var pill = $('pill'), msg = $('msg'), btnStart = $('btnStart'), btnStop = $('btnStop'), keyRow = $('keyRow'), keyEl = $('key');
+var st = { open: false, changedAt: 0, loaded: false, error: '' }, writing = false, note = '', noteIsErr = false;
+var POLL = Math.max(500, parseInt(new URLSearchParams(location.search).get('poll') || '5000', 10) || 5000);
+
+$('playUrl').textContent = location.origin + '/play';
+try { keyEl.value = sessionStorage.getItem('adminKey') || ''; } catch (e) {}
+keyEl.addEventListener('input', function () { try { sessionStorage.setItem('adminKey', keyEl.value); } catch (e) {} });
+
+function p2(n) { return (n < 10 ? '0' : '') + n; }
+function fmt(ts) { var d = new Date(ts); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); }
+function errText(code) {
+  if (code === 'storage_not_configured') return '저장소가 연결되지 않았습니다. README의 저장소 연결 단계를 확인해 주세요.';
+  if (code === 'unauthorized') return '관리 키가 올바르지 않습니다.';
+  return '서버와 통신하지 못했습니다. (' + code + ')';
+}
+function render() {
+  pill.className = 'pill ' + (st.loaded && st.open ? 'on' : 'off');
+  pill.textContent = !st.loaded ? (st.error ? '확인 불가' : '확인 중…') : (st.open ? '운영 중' : '운영 종료');
+  var ready = st.loaded && !writing;
+  btnStart.disabled = !ready || st.open;
+  btnStop.disabled = !ready || !st.open;
+  if (note) { msg.textContent = note; msg.className = 'note' + (noteIsErr ? ' err' : ''); }
+  else if (st.error) { msg.textContent = errText(st.error); msg.className = 'note err'; }
+  else { msg.textContent = st.changedAt ? '마지막 변경: ' + fmt(st.changedAt) : '아직 운영을 시작한 적이 없습니다.'; msg.className = 'note'; }
+}
+function apply(j) {
+  st.loaded = true; st.error = ''; st.open = j.open === true; st.changedAt = j.changedAt || 0;
+  if (j.keyRequired) keyRow.classList.remove('hidden'); else keyRow.classList.add('hidden');
+}
+function load() {
+  if (writing) return;
+  fetch('/api/status', { cache: 'no-store' }).then(function (r) {
+    return r.json().then(function (j) { return { ok: r.ok, j: j }; });
+  }).then(function (x) {
+    if (!x.ok) { st.loaded = false; st.error = (x.j && x.j.error) || 'error'; if (x.j && x.j.keyRequired) keyRow.classList.remove('hidden'); }
+    else apply(x.j);
+    render();
+  }).then(null, function () { st.loaded = false; st.error = 'network'; render(); });
+}
+function setOpen(v) {
+  if (writing) return;
+  writing = true; note = ''; noteIsErr = false; render();
+  fetch('/api/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ open: v, key: keyEl.value }) })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (x) {
+      if (x.ok) apply(x.j); else { note = errText((x.j && x.j.error) || 'error'); noteIsErr = true; }
+    }, function () { note = errText('network'); noteIsErr = true; })
+    .then(function () { writing = false; render(); });
+}
+btnStart.addEventListener('click', function () { setOpen(true); });
+btnStop.addEventListener('click', function () { setOpen(false); });
+render(); load(); setInterval(load, POLL);
+})();
+</script>
+</body>
+</html>

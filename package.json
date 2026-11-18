@@ -1,0 +1,16 @@
+{
+  "name": "nysc_game1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "우주 합치기 - 천체 머지 게임 (운영 시작/종료 관리 포함)",
+  "scripts": {
+    "dev": "node dev/server.js",
+    "build:game": "node tools/build.js"
+  },
+  "devDependencies": {
+    "matter-js": "0.20.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

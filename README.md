@@ -1,0 +1,55 @@
+# 우주 합치기 (nysc_game1)
+
+수박게임 방식의 우주 테마 머지 게임입니다. 달 → 수성 → 화성 → 금성 → 지구 → 해왕성 → 천왕성 → 토성 → 목성 → 태양 → 은하 순서로 합쳐집니다.
+관리 페이지에서 **운영 시작 / 운영 종료**를 누르면, 참가자용 게임 페이지가 열리거나 흰 화면으로 덮입니다.
+
+## 주소
+
+| 주소 | 용도 | 공유 대상 |
+|---|---|---|
+| `/` | 관리 페이지 (운영 시작/종료) | 나만 |
+| `/play` | 게임 페이지 (운영 중에만 "게임으로 이동" 표시) | 참가자 |
+| `/game` | 실제 게임. 운영 중이 아니면 서버가 게임 코드를 보내지 않음 (403 + 흰 화면) | - |
+
+## 구조
+
+```
+public/index.html     관리 페이지
+public/play.html      참가자용 페이지
+api/status.js         GET/POST 운영 상태
+api/game.js           운영 중일 때만 game/game.html 응답
+lib/store.js          상태 저장 (Upstash Redis REST, 로컬은 파일)
+game/game.html        빌드된 게임 (Matter.js 포함 단일 파일, 커밋되어 있음)
+src/                  게임 템플릿과 클라이언트 스크립트
+tools/build.js        game/game.html 빌드
+dev/server.js         로컬 개발 서버
+vercel.json           /game -> /api/game, game/** 를 함수에 포함
+```
+
+## 배포 순서 (GitHub + Vercel)
+
+1. 이 폴더 전체를 `ggaerok/nysc_game1` 에 올립니다. (`game/game.html` 포함)
+2. Vercel 에서 **Add New → Project** 로 저장소를 가져옵니다. 설정은 기본값 그대로 두면 됩니다.
+3. 프로젝트의 **Storage** 탭에서 Marketplace 의 **Upstash Redis** 를 만들어 이 프로젝트에 연결합니다.
+   `KV_REST_API_URL`, `KV_REST_API_TOKEN` 환경변수가 자동으로 들어갑니다.
+4. (선택) **Settings → Environment Variables** 에 `ADMIN_KEY` 를 넣으면 운영 시작/종료 때 키를 입력해야 합니다.
+5. **Redeploy** 합니다. 이후 `https://<프로젝트>.vercel.app/` 이 관리 페이지, `/play` 가 참가자용입니다.
+
+저장소가 연결되지 않으면 관리 페이지에 안내가 뜨고, 게임 페이지는 항상 흰 화면(닫힘)으로 동작합니다.
+
+## 로컬 실행
+
+```
+npm install
+npm run dev          # http://localhost:3000  (상태는 .dev-status.json 에 저장)
+```
+
+게임 코드를 고쳤다면 `src/game.template.html` 을 수정한 뒤 `npm run build:game` 으로 `game/game.html` 을 다시 만들어 커밋합니다.
+
+## 동작과 한계
+
+- 닫힘 상태에서는 `/game` 이 게임 코드를 아예 보내지 않습니다.
+- 이미 게임을 연 사용자는 3초마다 상태를 확인해 닫힘이 되면 흰 화면으로 덮이고 게임이 멈춥니다. 최대 약 3초 지연됩니다.
+- 열려 있는 동안 게임을 받아 간 사람이 브라우저에서 스크립트를 조작하면 덮개를 피할 수 있습니다. 내부용 전제라 완전 차단은 하지 않았습니다.
+- `/` 주소를 아는 사람은 누구나 운영을 바꿀 수 있습니다. 필요하면 `ADMIN_KEY` 를 설정하세요.
+- 모바일 Chrome 과 Samsung Internet 을 기준으로 만들었지만, 실제 삼성 기기에서의 확인은 아직 하지 못했습니다.
