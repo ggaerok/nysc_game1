@@ -40,13 +40,12 @@ html,body{margin:0;height:100%;background:#3b2a8a;color:#1b1330;
   height:38px;padding:0 13px;display:flex;align-items:center;gap:6px;cursor:pointer;flex:none}
 #btnHall:active{transform:translateY(3px);box-shadow:0 1px 0 #1b1330}
 #btnHall svg{stroke:#1b1330}
-#banner{flex:none;width:calc(100% - 24px);max-width:496px;margin:0 auto 8px;padding:5px 10px;background:#ffd23f;border:3px solid #1b1330;border-radius:14px;box-shadow:0 3px 0 #1b1330;
-  color:#1b1330;text-align:left;font-size:min(14px,calc((100vw - 70px) / 21));line-height:1.4;white-space:nowrap;overflow:hidden;box-sizing:border-box}
+#banner{text-align:left;color:#4a3b78;font-weight:700;font-size:min(13.5px,calc((100vw - 70px) / 22));line-height:1.45;white-space:nowrap;padding:0 2px;margin:0}
 #stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:4px 8px 6px}
 #game{display:block;touch-action:none;border-radius:20px;box-shadow:0 5px 0 #1b1330}
-#legend{--u:30px;width:calc(100% - 24px);max-width:496px;display:flex;justify-content:space-between;
-  align-items:flex-end;padding:7px 4px 5px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));
-  background:#fff3cf;border:3.5px solid #1b1330;border-radius:18px;box-shadow:0 4px 0 #1b1330}
+#legcard{flex:none;width:calc(100% - 24px);max-width:496px;padding:8px 10px 6px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));
+  background:#fff3cf;border:3.5px solid #1b1330;border-radius:18px;box-shadow:0 4px 0 #1b1330;box-sizing:border-box}
+#legend{--u:30px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px}
 #legend .it{flex:none;width:var(--u);display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
 #legend .it canvas{display:block;flex:none}
 #legend .it span{margin-top:2px;font-size:calc(var(--u) / 3.5);line-height:1.1;color:#1b1330;white-space:nowrap;letter-spacing:-.04em}
@@ -107,8 +106,8 @@ html,body{margin:0;height:100%;background:#3b2a8a;color:#1b1330;
     </div>
   </header>
   <main id="stage"><canvas id="game"></canvas></main>
-  <div id="banner"><div>※ 천체가 합쳐져 커지는 것은 게임 속 설정입니다.</div><div>※ 천체 크기는 실제 비율과 다릅니다.</div></div>
-  <footer id="legend"></footer>
+  <div id="legcard"><div id="banner"><div>※ 천체가 합쳐져 커지는 것은 게임 속 설정입니다.</div><div>※ 천체 크기는 실제 비율과 다릅니다.</div></div>
+  <footer id="legend"></footer></div>
   <div id="dlg" class="hidden"><div class="card" id="dlgCard"></div></div>
   <div id="over" class="hidden">
     <div class="card">
