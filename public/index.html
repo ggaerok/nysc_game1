@@ -52,6 +52,11 @@ ol.hall .nm small{display:block;font-size:12px;color:#6b5c9a}
 ol.hall li.live .nm small{color:#1f8a52}
 ol.hall .pt{flex:none;font-variant-numeric:tabular-nums}
 .empty{color:#6b5c9a;font-size:15px;padding:14px 0}
+#gate{width:100%;max-width:340px;margin-top:12vh}
+#gate .card{margin-top:0}
+#pin{letter-spacing:.5em;font-size:26px;max-width:200px;padding-left:calc(14px + .5em)}
+#app{width:100%;display:flex;flex-direction:column;align-items:center}
+#pinMsg{min-height:1.6em}
 #mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(27,19,48,.72);display:flex;align-items:center;justify-content:center;padding:20px;z-index:10}
 #dlg{background:#fff3cf;border:3.5px solid #1b1330;border-radius:24px;box-shadow:0 6px 0 #1b1330;padding:22px 24px;max-width:340px;width:100%}
 #dlg p{margin:6px 0 0;font-size:15px;line-height:1.55;color:#4a3b78}
@@ -61,6 +66,17 @@ ol.hall .pt{flex:none;font-variant-numeric:tabular-nums}
 </head>
 <body>
 <h1>운영 관리</h1>
+<div id="gate">
+  <div class="card">
+    <h2>관리 번호 입력</h2>
+    <p class="note">운영을 바꾸려면 관리 번호를 입력해 주세요.</p>
+    <input id="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="····" autocomplete="off" disabled>
+    <p id="pinMsg" class="note">확인 중…</p>
+    <div class="row"><button id="pinBtn" class="btn go" type="button" disabled>확인</button></div>
+  </div>
+</div>
+<div id="app" class="hidden">
+<p id="noPin" class="top-note err hidden" style="color:#ffd2d2">관리 번호가 설정되지 않아 누구나 설정을 바꿀 수 있습니다. (Vercel 환경변수 ADMIN_KEY)</p>
 <p class="top-note">이 주소는 참가자에게 공유하지 마세요. 참가자에게는 아래의 게임 페이지 주소만 알려 주세요.</p>
 <div class="card">
 <div id="pill" class="pill off">확인 중…</div>
@@ -68,7 +84,6 @@ ol.hall .pt{flex:none;font-variant-numeric:tabular-nums}
 
 <label class="f" for="group">단체명</label>
 <input id="group" type="text" maxlength="20" placeholder="예: 영업1팀" autocomplete="off">
-<div id="keyRow" class="hidden"><label class="f" for="key">관리 키</label><input id="key" type="password" placeholder="관리 키" autocomplete="off"></div>
 <div class="row">
   <button id="btnStart" class="btn go" type="button" disabled>운영 시작</button>
   <button id="btnStop" class="btn stop" type="button" disabled>운영 종료</button>
@@ -84,6 +99,8 @@ ol.hall .pt{flex:none;font-variant-numeric:tabular-nums}
   <div class="row"><button id="btnClear" class="btn danger" type="button" disabled>역대기록 지우기</button></div>
 </div>
 
+</div>
+
 <div id="mask" class="hidden"><div id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">
   <h2 id="dlgT">역대기록 지우기</h2>
   <p>역대 최고기록 전체를 삭제합니다. 삭제한 기록은 되돌릴 수 없습니다.<br>진행 중인 운영의 기록은 점수가 다시 오를 때부터 쌓입니다.</p>
@@ -95,21 +112,23 @@ ol.hall .pt{flex:none;font-variant-numeric:tabular-nums}
 'use strict';
 function $(id) { return document.getElementById(id); }
 var pill = $('pill'), cur = $('cur'), msg = $('msg'), btnStart = $('btnStart'), btnStop = $('btnStop'), btnClear = $('btnClear');
-var keyRow = $('keyRow'), keyEl = $('key'), groupEl = $('group'), hallBody = $('hallBody'), mask = $('mask');
+var groupEl = $('group'), hallBody = $('hallBody'), mask = $('mask');
+var gate = $('gate'), app = $('app'), pin = $('pin'), pinBtn = $('pinBtn'), pinMsg = $('pinMsg'), noPin = $('noPin');
+var adminKey = '', unlocked = false, lockTimer = null;
 var st = { open: false, changedAt: 0, group: '', best: 0, loaded: false, error: '' }, writing = false, note = '', noteIsErr = false;
 var hall = null, hallError = false, groupTouched = false;
 var POLL = Math.max(500, parseInt(new URLSearchParams(location.search).get('poll') || '5000', 10) || 5000);
 
 $('playUrl').textContent = location.origin + '/play';
-try { keyEl.value = sessionStorage.getItem('adminKey') || ''; } catch (e) {}
-keyEl.addEventListener('input', function () { try { sessionStorage.setItem('adminKey', keyEl.value); } catch (e) {} });
+try { adminKey = sessionStorage.getItem('adminKey') || ''; } catch (e) {}
 groupEl.addEventListener('input', function () { groupTouched = true; render(); });
 
 function p2(n) { return (n < 10 ? '0' : '') + n; }
 function fmt(ts) { var d = new Date(ts); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()); }
 function errText(code) {
   if (code === 'storage_not_configured') return '저장소가 연결되지 않았습니다. README의 저장소 연결 단계를 확인해 주세요.';
-  if (code === 'unauthorized') return '관리 키가 올바르지 않습니다.';
+  if (code === 'unauthorized') return '관리 번호가 올바르지 않습니다.';
+  if (code === 'locked') return '번호를 여러 번 틀려 잠시 잠겼습니다.';
   if (code === 'group_required') return '단체명을 입력해 주세요.';
   if (code === 'already_open') return '이미 운영 중입니다.';
   return '서버와 통신하지 못했습니다. (' + code + ')';
@@ -149,7 +168,6 @@ function renderHall() {
 }
 function apply(j) {
   st.loaded = true; st.error = ''; st.open = j.open === true; st.changedAt = j.changedAt || 0; st.group = j.group || ''; st.best = j.best || 0;
-  if (j.keyRequired) keyRow.classList.remove('hidden'); else keyRow.classList.add('hidden');
   if (st.open) groupEl.value = st.group;
   else if (!groupTouched && st.group && !groupEl.value) groupEl.value = st.group;   // 지난 단체명을 미리 채워 준다
 }
@@ -163,7 +181,7 @@ function loadHall() {
 function load() {
   if (writing) return;
   fetch('/api/status', { cache: 'no-store' }).then(jsonOf).then(function (x) {
-    if (!x.ok) { st.loaded = false; st.error = (x.j && x.j.error) || 'error'; if (x.j && x.j.keyRequired) keyRow.classList.remove('hidden'); }
+    if (!x.ok) { st.loaded = false; st.error = (x.j && x.j.error) || 'error'; }
     else apply(x.j);
     render();
   }).then(null, function () { st.loaded = false; st.error = 'network'; render(); });
@@ -177,11 +195,11 @@ function post(url, body, done) {
 }
 function setOpen(v) {
   if (writing) return;
-  post('/api/status', { open: v, group: groupEl.value, key: keyEl.value }, function (x) {
+  post('/api/status', { open: v, group: groupEl.value, key: adminKey }, function (x) {
     if (x.ok) {
       apply(x.j);
       if (v && x.j.resumed) { note = '이미 있는 단체명이라 기존 기록(' + x.j.best + '점)을 이어서 사용합니다.'; noteIsErr = false; }
-    } else { note = errText((x.j && x.j.error) || 'error'); noteIsErr = true; }
+    } else if (authFailed(x)) { return; } else { note = errText((x.j && x.j.error) || 'error'); noteIsErr = true; }
   });
 }
 btnStart.addEventListener('click', function () { setOpen(true); });
@@ -195,13 +213,69 @@ mask.addEventListener('click', function (e) { if (e.target === mask) closeDlg();
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !mask.classList.contains('hidden')) closeDlg(); });
 $('dlgYes').addEventListener('click', function () {
   mask.classList.add('hidden');
-  post('/api/hall', { clear: true, key: keyEl.value }, function (x) {
+  post('/api/hall', { clear: true, key: adminKey }, function (x) {
     if (x.ok) { hall = []; note = '역대 기록을 모두 지웠습니다.'; noteIsErr = false; }
+    else if (authFailed(x)) { return; }
     else { note = errText((x.j && x.j.error) || 'error'); noteIsErr = true; }
   });
 });
 
-render(); load(); setInterval(load, POLL);
+/* ---------- 관리 번호 입력 화면 ---------- */
+function setPinMsg(t, err) { pinMsg.textContent = t; pinMsg.className = 'note' + (err ? ' err' : ''); }
+function showGate(msg, err) {
+  unlocked = false; app.classList.add('hidden'); gate.classList.remove('hidden');
+  pin.disabled = false; pinBtn.disabled = false; pin.value = ''; setPinMsg(msg || '', err);
+  try { pin.focus(); } catch (e) {}
+}
+function showApp() { unlocked = true; gate.classList.add('hidden'); app.classList.remove('hidden'); render(); load(); }
+function startLock(sec) {
+  clearInterval(lockTimer);
+  var until = Date.now() + sec * 1000;
+  gate.classList.remove('hidden'); app.classList.add('hidden'); unlocked = false;
+  pin.value = ''; pin.disabled = true; pinBtn.disabled = true;
+  function tick() {
+    var left = Math.ceil((until - Date.now()) / 1000);
+    if (left <= 0) { clearInterval(lockTimer); pin.disabled = false; pinBtn.disabled = false; setPinMsg('다시 입력해 주세요.', false); try { pin.focus(); } catch (e) {} return; }
+    setPinMsg('번호를 5번 틀려 입력이 잠겼습니다. ' + left + '초 후에 다시 입력할 수 있습니다.', true);
+  }
+  tick(); lockTimer = setInterval(tick, 250);
+}
+// 설정 변경이 번호 때문에 거절되면 입력 화면으로 되돌린다
+function authFailed(x) {
+  var e = x.j && x.j.error;
+  if (e !== 'unauthorized' && e !== 'locked') return false;
+  adminKey = ''; try { sessionStorage.removeItem('adminKey'); } catch (er) {}
+  if (e === 'locked') startLock((x.j && x.j.retryAfter) || 60); else showGate('관리 번호가 다시 필요합니다.', true);
+  return true;
+}
+function submitPin() {
+  var v = pin.value.replace(/\s+/g, '');
+  if (!v) return;
+  pin.disabled = true; pinBtn.disabled = true; setPinMsg('확인 중…', false);
+  fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: v }) }).then(jsonOf).then(function (x) {
+    if (x.ok) { adminKey = v; try { sessionStorage.setItem('adminKey', v); } catch (e) {} showApp(); return; }
+    var err = x.j && x.j.error;
+    if (err === 'locked') startLock((x.j && x.j.retryAfter) || 60);
+    else if (err === 'unauthorized') showGate('번호가 맞지 않습니다. (남은 시도 ' + x.j.left + '회)', true);
+    else { showGate(errText(err || 'error'), true); }
+  }).then(null, function () { showGate(errText('network'), true); });
+}
+pinBtn.addEventListener('click', submitPin);
+pin.addEventListener('keydown', function (e) { if (e.key === 'Enter') submitPin(); });
+pin.addEventListener('input', function () { pin.value = pin.value.replace(/[^0-9]/g, ''); });
+function init() {
+  fetch('/api/auth', { cache: 'no-store' }).then(jsonOf).then(function (x) {
+    if (!x.ok) { showGate(errText((x.j && x.j.error) || 'error'), true); return; }
+    if (!x.j.keyRequired) { noPin.classList.remove('hidden'); showApp(); return; }
+    if (x.j.locked) { startLock(x.j.retryAfter || 60); return; }
+    if (adminKey) {   // 이 탭에서 이미 입력한 번호가 있으면 조용히 확인
+      fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: adminKey }) }).then(jsonOf).then(function (y) {
+        if (y.ok) showApp(); else if (y.j && y.j.error === 'locked') startLock(y.j.retryAfter || 60); else { adminKey = ''; try { sessionStorage.removeItem('adminKey'); } catch (e) {} showGate('', false); }
+      });
+    } else showGate('', false);
+  }).then(null, function () { showGate(errText('network'), true); });
+}
+render(); setInterval(load, POLL); init();
 })();
 </script>
 </body>
