@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const [list, st] = await Promise.all([store.getHall(), store.getState()]);
-      const entries = list.map((e) => ({ name: e.name, score: e.score, at: e.at, live: st.open && e.sid === st.sid }));
+      const entries = list.map((e) => ({ name: e.name, score: e.score, at: e.at, live: st.open && e.name === st.group }));
       return res.status(200).json({ entries, keyRequired: kr });
     }
     if (req.method === 'POST') {

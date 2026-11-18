@@ -76,7 +76,7 @@ ol.hall .pt{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
 
 <div id="mask" class="hidden"><div id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">
   <h2 id="dlgT">역대기록 지우기</h2>
-  <p>역대 최고기록 전체를 삭제합니다. 삭제한 기록은 되돌릴 수 없습니다.<br>진행 중인 운영의 이번 기록은 다음 점수 갱신부터 다시 쌓입니다.</p>
+  <p>역대 최고기록 전체를 삭제합니다. 삭제한 기록은 되돌릴 수 없습니다.<br>진행 중인 운영의 기록은 점수가 다시 오를 때부터 쌓입니다.</p>
   <div class="row"><button id="dlgNo" class="btn sub" type="button">취소</button><button id="dlgYes" class="btn stop" type="button">삭제</button></div>
 </div></div>
 
@@ -168,7 +168,10 @@ function post(url, body, done) {
 function setOpen(v) {
   if (writing) return;
   post('/api/status', { open: v, group: groupEl.value, key: keyEl.value }, function (x) {
-    if (x.ok) apply(x.j); else { note = errText((x.j && x.j.error) || 'error'); noteIsErr = true; }
+    if (x.ok) {
+      apply(x.j);
+      if (v && x.j.resumed) { note = '이미 있는 단체명이라 기존 기록(' + x.j.best + '점)을 이어서 사용합니다.'; noteIsErr = false; }
+    } else { note = errText((x.j && x.j.error) || 'error'); noteIsErr = true; }
   });
 }
 btnStart.addEventListener('click', function () { setOpen(true); });

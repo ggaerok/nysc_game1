@@ -13,7 +13,9 @@ function cleanGroup(v) {
   return Array.from(s).slice(0, GROUP_MAX).join('');
 }
 function view(s, kr) {
-  return { open: s.open, changedAt: s.changedAt, group: s.group, best: s.best, keyRequired: kr };
+  const o = { open: s.open, changedAt: s.changedAt, group: s.group, best: s.best, keyRequired: kr };
+  if (s.resumed) o.resumed = true;
+  return o;
 }
 
 module.exports = async (req, res) => {
