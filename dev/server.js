@@ -15,6 +15,8 @@ if (!hasRedis && !process.env.STATUS_FILE && !process.env.NO_STORAGE) process.en
 
 const status = require('../api/status');
 const game = require('../api/game');
+const score = require('../api/score');
+const hall = require('../api/hall');
 
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
                 '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json' };
@@ -40,6 +42,8 @@ const server = http.createServer((req, res) => {
     });
   }
   if (pathname === '/api/status') return run(status);
+  if (pathname === '/api/score') return run(score);
+  if (pathname === '/api/hall') return run(hall);
   if (pathname === '/game' || pathname === '/api/game') return run(game);
   let p = pathname === '/' ? '/index' : pathname;
   if (!path.extname(p)) p += '.html';

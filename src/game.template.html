@@ -13,12 +13,40 @@ html,body{margin:0;height:100%;background:#05060f;color:#e8ecff;
   -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #app{position:relative;height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(120% 70% at 50% 0%,#121638 0%,#05060f 60%)}
-#hud{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;
-  padding:8px 14px 4px;padding-top:calc(8px + env(safe-area-inset-top,0px));gap:8px}
-.box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
-.box .lab{font-size:11px;letter-spacing:.08em;color:#8f9ad6}
-.box b{font-size:26px;font-variant-numeric:tabular-nums;line-height:1.15}
-.box.next canvas{width:48px;height:48px;margin-top:2px}
+#hud{width:100%;max-width:520px;display:flex;flex-direction:column;gap:6px;
+  padding:6px 10px 2px;padding-top:calc(6px + env(safe-area-inset-top,0px))}
+#topline{display:flex;align-items:center;gap:8px;min-height:36px}
+#org{flex:1;min-width:0;font-size:15px;font-weight:800;color:#ffd54a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar{display:flex;align-items:stretch;gap:6px;height:54px}
+.box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;
+  background:#12163a;border-radius:12px;padding:2px 6px}
+.box .lab{font-size:11px;letter-spacing:.06em;color:#9aa5e0}
+.box b{font-size:22px;font-variant-numeric:tabular-nums;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.box.best b{color:#ffd54a}
+.box.next{flex:none;width:54px}
+.box.next canvas{width:30px;height:30px}
+.ib{flex:none;width:46px;border:0;border-radius:12px;background:#2a3068;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.ib:active{transform:scale(.95)}
+.ib svg{display:block}
+#btnHall{font:inherit;font-size:13px;font-weight:700;color:#e8ecff;background:#2a3068;border:0;border-radius:12px;height:36px;
+  padding:0 12px;display:flex;align-items:center;gap:6px;cursor:pointer;flex:none}
+#btnHall:active{transform:scale(.97)}
+#dlg{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(3,4,12,.78);z-index:8;padding:16px}
+#dlg .card{width:100%;max-width:360px;min-width:0}
+#dlg .row{display:flex;gap:10px;margin-top:16px}
+#dlg .row button{flex:1;margin-top:0;padding:12px 0;font-size:16px}
+#dlg .row button.sec{background:#2a3068;color:#e8ecff}
+#dlg ol{list-style:none;margin:6px 0 0;padding:0;text-align:left}
+#dlg li{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid #232a63;font-size:15px}
+#dlg li:last-child{border-bottom:0}
+#dlg li .rk{flex:none;width:22px;text-align:center;font-weight:800;color:#8f9ad6}
+#dlg li:nth-child(1) .rk{color:#ffd54a}
+#dlg li .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dlg li .nm small{display:block;font-size:11px;color:#8f9ad6}
+#dlg li .pt{flex:none;font-weight:800;font-variant-numeric:tabular-nums}
+#dlg li.live .nm small{color:#7be0a4}
+#dlg .empty{padding:18px 0;color:#8f9ad6;font-size:14px;text-align:center}
 #stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:0 8px}
 #game{display:block;touch-action:none;border-radius:10px}
 #legend{--u:min(44px,calc((100vw - 8px) / 11));width:100%;max-width:520px;display:flex;justify-content:center;
@@ -50,17 +78,33 @@ html,body{margin:0;height:100%;background:#05060f;color:#e8ecff;
 <div id="cover" class="screen hidden"><span id="coverMsg"></span></div>
 <div id="app">
   <header id="hud">
-    <div class="box"><span class="lab">점수</span><b id="score">0</b></div>
-    <div class="box next"><span class="lab">다음</span><canvas id="next" width="96" height="96"></canvas></div>
-    <div class="box"><span class="lab">최고</span><b id="best">0</b></div>
+    <div id="topline">
+      <span id="org"></span>
+      <button id="btnHall" type="button" aria-label="역대 최고기록">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffd54a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v6a4 4 0 0 1-8 0V4z"/><path d="M8 6H4v1a3 3 0 0 0 4 3M16 6h4v1a3 3 0 0 1-4 3"/><path d="M12 14v4M8 20h8"/></svg>
+        <span>역대 기록</span>
+      </button>
+    </div>
+    <div id="bar">
+      <div class="box"><span class="lab">점수</span><b id="score">0</b></div>
+      <div class="box best"><span class="lab">최고</span><b id="best">0</b></div>
+      <div class="box next"><span class="lab">다음</span><canvas id="next" width="96" height="96"></canvas></div>
+      <button class="ib" id="btnHome" type="button" aria-label="처음으로">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8ecff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+      </button>
+      <button class="ib" id="btnRefresh" type="button" aria-label="새로고침 (다시 시작)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8ecff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 6"/><path d="M20 4v7h-7"/></svg>
+      </button>
+    </div>
   </header>
   <main id="stage"><canvas id="game"></canvas></main>
   <footer id="legend"></footer>
+  <div id="dlg" class="hidden"><div class="card" id="dlgCard"></div></div>
   <div id="over" class="hidden">
     <div class="card">
       <h2>게임 오버</h2>
       <p>점수 <b id="finalScore">0</b></p>
-      <p class="sm">최고 <span id="finalBest">0</span></p>
+      <p class="sm">단체 최고 <span id="finalBest">0</span></p>
       <button id="restart" type="button">다시 하기</button>
     </div>
   </div>
@@ -480,7 +524,7 @@ Composite.add(world, [
 var simTime = 0, score = 0, best = 0, state = 'play', overT = 0;
 var cur = 0, nxt = 0, dropX = W / 2, canDrop = true, nextDropAt = 0, pressed = false;
 var mergeQueue = [], particles = [], rings = [];
-try { best = parseInt(localStorage.getItem('spacemerge.best') || '0', 10) || 0; } catch (e) { best = 0; }
+var uiOpen = 0, sentMax = 0, sendTimer = 0, lastSend = 0;   // 창이 열려 있으면 게임이 멈춘다 / 서버로 보낸 최고 점수
 elBest.textContent = best;
 
 function randDrop() {
@@ -489,7 +533,29 @@ function randDrop() {
   for (i = 0; i < DROP_WEIGHTS.length; i++) { v -= DROP_WEIGHTS[i]; if (v < 0) return i; }
   return 0;
 }
-function setScore(v) { score = v; elScore.textContent = v; }
+// 단체 최고 점수는 서버 값(best)과 내 현재 점수 중 큰 값을 보여 준다
+function showBest() { var v = Math.max(best, score); elBest.textContent = v; }
+function setBest(v) { best = Number(v) || 0; showBest(); }
+function setScore(v) { score = v; elScore.textContent = v; showBest(); maybeSend(false); }
+function sendScore() {
+  lastSend = Date.now(); sendTimer = 0;
+  if (score <= sentMax) return;
+  var s = score;
+  try {
+    fetch('/api/score', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ score: s }) })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && typeof j.best === 'number') { sentMax = Math.max(sentMax, s); setBest(j.best); } })
+      .then(null, function () {});
+  } catch (e) {}
+}
+// 점수가 오르면 서버로 보낸다 (너무 자주 보내지 않도록 1.5초에 한 번, 마지막 값은 반드시 보낸다)
+function maybeSend(force) {
+  if (score <= sentMax) return;
+  if (force) { if (sendTimer) { clearTimeout(sendTimer); sendTimer = 0; } sendScore(); return; }
+  if (sendTimer) return;
+  var wait = Math.max(0, 1500 - (Date.now() - lastSend));
+  sendTimer = setTimeout(sendScore, wait);
+}
 function setNext() { drawIcon(nextCv, nxt, false); }
 function clampX(x, level) { var r = BODIES[level].r; return Math.max(r, Math.min(W - r, x)); }
 
@@ -553,7 +619,7 @@ function processMerges() {
 }
 
 function tryDrop() {
-  if (state !== 'play' || !canDrop || simTime < nextDropAt) return false;
+  if (state !== 'play' || uiOpen || !canDrop || simTime < nextDropAt) return false;
   spawn(cur, clampX(dropX, cur), DROP_Y, 0, 0);
   cur = nxt; nxt = randDrop(); setNext();
   canDrop = false; nextDropAt = simTime + 520;
@@ -561,9 +627,9 @@ function tryDrop() {
 }
 function endGame() {
   state = 'over';
-  if (score > best) { best = score; elBest.textContent = best; try { localStorage.setItem('spacemerge.best', String(best)); } catch (e) {} }
+  maybeSend(true);
   document.getElementById('finalScore').textContent = score;
-  document.getElementById('finalBest').textContent = best;
+  document.getElementById('finalBest').textContent = Math.max(best, score);
   elOver.classList.remove('hidden');
 }
 function checkOver() {
@@ -675,12 +741,59 @@ document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
 document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 document.getElementById('restart').addEventListener('click', reset);
 
+/* ---------- 창(역대 기록 / 확인) ---------- */
+var elDlg = document.getElementById('dlg'), elDlgCard = document.getElementById('dlgCard');
+function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+function openDlg() { if (!uiOpen) { uiOpen = 1; pressed = false; } elDlg.classList.remove('hidden'); }
+function closeDlg() { uiOpen = 0; elDlg.classList.add('hidden'); elDlgCard.textContent = ''; last = 0; }
+function confirmDlg(title, msg, okLabel, onOk) {
+  elDlgCard.textContent = '';
+  elDlgCard.appendChild(el('h2', '', title));
+  elDlgCard.appendChild(el('p', 'sm', msg));
+  var row = el('div', 'row');
+  var no = el('button', 'sec', '취소'); no.type = 'button'; no.addEventListener('click', closeDlg);
+  var ok = el('button', '', okLabel); ok.type = 'button'; ok.addEventListener('click', function () { closeDlg(); onOk(); });
+  row.appendChild(no); row.appendChild(ok); elDlgCard.appendChild(row);
+  openDlg();
+}
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function fmtAt(ts) { var d = new Date(ts); return pad(d.getMonth() + 1) + '.' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function hallDlg() {
+  elDlgCard.textContent = '';
+  elDlgCard.appendChild(el('h2', '', '역대 최고기록'));
+  var body = el('div', 'empty', '불러오는 중…'); elDlgCard.appendChild(body);
+  var row = el('div', 'row'); var close = el('button', '', '닫기'); close.type = 'button'; close.addEventListener('click', closeDlg);
+  row.appendChild(close); elDlgCard.appendChild(row);
+  openDlg();
+  fetch('/api/hall', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); }).then(function (j) {
+    if (!uiOpen || !elDlgCard.contains(body)) return;
+    var list = (j && j.entries) || [];
+    if (!list.length) { body.textContent = '아직 기록이 없습니다.'; return; }
+    var ol = el('ol');
+    list.forEach(function (e, i) {
+      var li = el('li', e.live ? 'live' : '');
+      li.appendChild(el('span', 'rk', String(i + 1)));
+      var nm = el('span', 'nm', e.name); nm.appendChild(el('small', '', e.live ? '진행 중' : fmtAt(e.at)));
+      li.appendChild(nm); li.appendChild(el('span', 'pt', String(e.score))); ol.appendChild(li);
+    });
+    body.replaceWith(ol);
+  }).then(null, function () { if (elDlgCard.contains(body)) body.textContent = '기록을 불러오지 못했습니다.'; });
+}
+document.getElementById('btnHall').addEventListener('click', hallDlg);
+document.getElementById('btnHome').addEventListener('click', function () {
+  function go() { location.href = '/play' + location.search; }
+  if (state === 'play' && score > 0) confirmDlg('처음으로', '처음 화면으로 돌아갑니다. 진행 중인 게임은 사라집니다.', '돌아가기', go); else go();
+});
+document.getElementById('btnRefresh').addEventListener('click', function () {
+  if (state === 'play' && score > 0) confirmDlg('다시 시작', '지금 게임을 끝내고 처음부터 다시 시작합니다.', '다시 시작', reset); else reset();
+});
+
 /* ---------- 메인 루프 (주사율과 무관하게 60Hz 고정 시뮬레이션) ---------- */
 var last = 0, acc = 0, running = false, loopToken = 0;
 function tick(t) {
   if (!last) last = t;
   var dt = Math.min(100, t - last); last = t;
-  if (state === 'play' && !document.hidden) {
+  if (state === 'play' && !document.hidden && !uiOpen) {
     acc += dt; var n = 0;
     while (acc >= STEP && n < 5) { stepSim(); acc -= STEP; n++; }
     if (n === 5) acc = 0;
@@ -697,9 +810,14 @@ function start() {
 }
 function stop() {
   if (!running) return;
-  running = false; pressed = false; reset(); elOver.classList.add('hidden');
+  running = false; pressed = false; reset(); elOver.classList.add('hidden'); closeDlg();
 }
-window.__game = { start: start, stop: stop, isRunning: function () { return running; } };
+window.__game = { start: start, stop: stop, isRunning: function () { return running; },
+  setInfo: function (o) {
+    if (!o) return;
+    if (typeof o.group === 'string') document.getElementById('org').textContent = o.group;
+    if (typeof o.best === 'number') { best = o.best; showBest(); }
+  } };
 
 window.addEventListener('resize', fit);
 window.addEventListener('orientationchange', function () { setTimeout(fit, 200); });

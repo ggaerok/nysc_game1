@@ -26,6 +26,7 @@ function check() {
   }).then(function (s) {
     fails = 0;
     open = s && s.open === true;
+    if (open && window.__game && window.__game.setInfo) window.__game.setInfo({ group: s.group || '', best: Number(s.best) || 0 });
     if (!open) { if (!covered) setCovered(true, '현재 운영 중이 아닙니다'); else coverMsg.textContent = '현재 운영 중이 아닙니다'; }
     else if (covered) { location.replace('/play' + location.search); }   // 다시 열리면 입구부터
   }).then(null, function () {

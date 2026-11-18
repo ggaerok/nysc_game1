@@ -1,36 +1,40 @@
-// GET  /api/status            -> { open, changedAt, keyRequired }
-// POST /api/status {open,key} -> 운영 시작/종료 (ADMIN_KEY 환경변수를 설정했다면 key 필요)
-const crypto = require('crypto');
+// GET  /api/status                      -> { open, changedAt, group, best, keyRequired }
+// POST /api/status {open:true, group, key} -> 운영 시작 (단체명 필수, 이번 운영 최고 점수는 0부터)
+// POST /api/status {open:false, key}       -> 운영 종료 (이번 운영 최고 점수는 지워지고 역대 기록은 남음)
+// ADMIN_KEY 환경변수를 설정했다면 POST 에는 key 가 필요하다.
 const store = require('../lib/store');
+const { keyRequired, keyOk, bodyOf } = require('../lib/auth');
 
-function keyOk(provided) {
-  const k = process.env.ADMIN_KEY;
-  if (!k) return true;
-  if (typeof provided !== 'string') return false;
-  const a = Buffer.from(provided), b = Buffer.from(k);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+const GROUP_MAX = 20;
+function cleanGroup(v) {
+  if (typeof v !== 'string') return '';
+  // 제어 문자 제거, 공백 정리, 최대 20자(글자 단위)
+  const s = v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+  return Array.from(s).slice(0, GROUP_MAX).join('');
+}
+function view(s, kr) {
+  return { open: s.open, changedAt: s.changedAt, group: s.group, best: s.best, keyRequired: kr };
 }
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
-  const keyRequired = !!process.env.ADMIN_KEY;
+  const kr = keyRequired();
   try {
-    if (req.method === 'GET') {
-      const s = await store.getStatus();
-      return res.status(200).json({ open: s.open, changedAt: s.changedAt, keyRequired });
-    }
+    if (req.method === 'GET') return res.status(200).json(view(await store.getState(), kr));
     if (req.method === 'POST') {
-      let body = req.body;
-      if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
-      body = body || {};
-      if (typeof body.open !== 'boolean') return res.status(400).json({ error: 'open must be boolean' });
-      if (!keyOk(body.key)) return res.status(401).json({ error: 'unauthorized' });
-      const s = await store.setStatus(body.open);
-      return res.status(200).json({ open: s.open, changedAt: s.changedAt, keyRequired });
+      const body = bodyOf(req);
+      if (typeof body.open !== 'boolean') return res.status(400).json({ error: 'open must be boolean', keyRequired: kr });
+      const group = cleanGroup(body.group);
+      if (body.open && !group) return res.status(400).json({ error: 'group_required', keyRequired: kr });
+      if (!keyOk(body.key)) return res.status(401).json({ error: 'unauthorized', keyRequired: kr });
+      const cur = await store.getState();
+      if (body.open && cur.open) return res.status(409).json({ error: 'already_open', keyRequired: kr });
+      const s = body.open ? await store.startOperation(group) : await store.stopOperation();
+      return res.status(200).json(view(s, kr));
     }
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: 'method_not_allowed' });
   } catch (e) {
-    return res.status(500).json({ error: e && e.code === 'STORAGE' ? 'storage_not_configured' : 'storage_error', keyRequired });
+    return res.status(500).json({ error: e && e.code === 'STORAGE' ? 'storage_not_configured' : 'storage_error', keyRequired: kr });
   }
 };
