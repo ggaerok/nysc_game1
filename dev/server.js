@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const hasRedis = !!((process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
+const hasRedis = !!(process.env.REDIS_URL || (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
                     (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN));
 if (!hasRedis && !process.env.STATUS_FILE && !process.env.NO_STORAGE) process.env.STATUS_FILE = path.join(root, '.dev-status.json');
 

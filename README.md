@@ -30,8 +30,8 @@ vercel.json           /game -> /api/game, game/** 를 함수에 포함
 
 1. 이 폴더 전체를 `ggaerok/nysc_game1` 에 올립니다. (`game/game.html` 포함)
 2. Vercel 에서 **Add New → Project** 로 저장소를 가져옵니다. 설정은 기본값 그대로 두면 됩니다.
-3. 프로젝트의 **Storage** 탭에서 Marketplace 의 **Upstash Redis** 를 만들어 이 프로젝트에 연결합니다.
-   `KV_REST_API_URL`, `KV_REST_API_TOKEN` 환경변수가 자동으로 들어갑니다.
+3. 프로젝트의 **Storage** 탭에서 Marketplace 의 **Redis** (또는 Upstash Redis) 를 만들어 이 프로젝트에 연결합니다.
+   Redis 는 `REDIS_URL`, Upstash 는 `KV_REST_API_URL`/`KV_REST_API_TOKEN` 환경변수가 자동으로 들어가며 둘 다 지원합니다.
 4. (선택) **Settings → Environment Variables** 에 `ADMIN_KEY` 를 넣으면 운영 시작/종료 때 키를 입력해야 합니다.
 5. **Redeploy** 합니다. 이후 `https://<프로젝트>.vercel.app/` 이 관리 페이지, `/play` 가 참가자용입니다.
 
