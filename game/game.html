@@ -41,9 +41,9 @@ html,body{margin:0;height:100%;background:#3b2a8a;color:#1b1330;
 #btnHall:active{transform:translateY(3px);box-shadow:0 1px 0 #1b1330}
 #btnHall svg{stroke:#1b1330}
 #banner{position:absolute;left:12px;top:8px;text-align:left;color:#4a3b78;font-weight:700;font-size:min(13.5px,calc((100vw - 70px) / 22));line-height:1.45;white-space:nowrap;padding:0 2px;margin:0}
-#stage{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:4px 8px 6px}
+#stage{touch-action:none;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:4px 8px 6px}
 #game{display:block;touch-action:none;border-radius:20px;box-shadow:0 5px 0 #1b1330}
-#legcard{position:relative;flex:none;width:calc(100% - 24px);max-width:496px;padding:8px 10px 6px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));
+#legcard{touch-action:none;position:relative;flex:none;width:calc(100% - 24px);max-width:496px;padding:8px 10px 6px;margin-bottom:calc(8px + env(safe-area-inset-bottom,0px));
   background:#fff3cf;border:3.5px solid #1b1330;border-radius:18px;box-shadow:0 4px 0 #1b1330;box-sizing:border-box}
 #legend{--u:30px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px}
 #legend .it{flex:none;width:var(--u);display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
@@ -763,21 +763,25 @@ function render() {
 
 /* ---------- 입력 (터치/마우스/키보드) ---------- */
 function toX(e) { var rc = canvas.getBoundingClientRect(); return (e.clientX - rc.left) / rc.width * W; }
-canvas.addEventListener('pointerdown', function (e) {
+// 게임판뿐 아니라 그 주변(stage)과 아래 안내·천체 카드 위에서도 누르고 밀면 조작된다 (모바일에서 엄지가 닿는 범위)
+function onDown(e) {
   e.preventDefault(); pressed = true;
-  try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
   dropX = toX(e);
-});
-canvas.addEventListener('pointermove', function (e) {
-  if (pressed || e.pointerType === 'mouse') dropX = toX(e);
-});
+}
+function onMove(e) { if (pressed || e.pointerType === 'mouse') dropX = toX(e); }
 function endPress(e) {
   if (!pressed) return;
   pressed = false; dropX = toX(e);
   if (e.type === 'pointerup') tryDrop();
 }
-canvas.addEventListener('pointerup', endPress);
-canvas.addEventListener('pointercancel', endPress);
+['stage', 'legcard'].forEach(function (id) {
+  var t = document.getElementById(id);
+  t.addEventListener('pointerdown', onDown);
+  t.addEventListener('pointermove', onMove);
+  t.addEventListener('pointerup', endPress);
+  t.addEventListener('pointercancel', endPress);
+});
 window.addEventListener('keydown', function (e) {
   if (e.key === 'ArrowLeft') dropX -= 14;
   else if (e.key === 'ArrowRight') dropX += 14;
