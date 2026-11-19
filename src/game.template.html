@@ -429,17 +429,32 @@ function makeSprite(def) {
   if (def.photo) def.draw(art.cx, r);
   else { art.cx.save(); circlePath(art.cx, 0, 0, r - .3); art.cx.clip(); if (def.tilt) art.cx.rotate(-def.tilt * Math.PI / 180); def.draw(art.cx, r); art.cx.restore(); }
   var front = mk(); drawFront(front.cx, r, def);
-  return { ext: def.ext, back: back.cv, art: art.cv, front: front.cv };
+  var sp = { ext: def.ext, back: back.cv, art: art.cv, front: front.cv };
+  if (def.photo) {   // 블랙홀: 판정 원 안쪽(inner)은 보통 순서로, 원 밖으로 뻗은 원반(outer)은 모든 천체의 맨 뒤로 그린다
+    var k = S / (2 * E), inn = document.createElement('canvas'), out = document.createElement('canvas'), ic, oc;
+    inn.width = inn.height = out.width = out.height = S; ic = inn.getContext('2d'); oc = out.getContext('2d');
+    ic.beginPath(); ic.arc(S / 2, S / 2, r * k, 0, TWO_PI); ic.clip(); ic.drawImage(art.cv, 0, 0);
+    oc.drawImage(art.cv, 0, 0); oc.globalCompositeOperation = 'destination-out';
+    oc.beginPath(); oc.arc(S / 2, S / 2, (r - .6) * k, 0, TWO_PI); oc.fill();
+    sp.inner = inn; sp.outer = out;
+  }
+  return sp;
 }
 var sprites = BODIES.map(makeSprite);
 window.__bhReady = function () { sprites[LAST] = makeSprite(BODIES[LAST]); if (LEGEND_CV[LAST]) drawIcon(LEGEND_CV[LAST], LAST); if (window.placeNote) placeNote(); };
 // 한 천체를 그린다: (x, y) 중심, ang 회전(무늬만), s 크기 배율
+function drawOuter(c, level, x, y, s) {   // 원 밖으로 뻗은 부분만 (블랙홀 전용)
+  var def = BODIES[level], E = def.ext * def.r;
+  c.save(); c.translate(x, y); if (s !== 1) c.scale(s, s);
+  c.drawImage(sprites[level].outer, -E, -E, 2 * E, 2 * E);
+  c.restore();
+}
 function drawBody(c, level, x, y, ang, s) {
   var def = BODIES[level], sp = sprites[level], E = def.ext * def.r;
   c.save(); c.translate(x, y); if (s !== 1) c.scale(s, s);
   c.drawImage(sp.back, -E, -E, 2 * E, 2 * E);
   if (ang && !def.tilt && !def.fixed) { c.save(); c.rotate(ang); c.drawImage(sp.art, -E, -E, 2 * E, 2 * E); c.restore(); }
-  else c.drawImage(sp.art, -E, -E, 2 * E, 2 * E);
+  else c.drawImage(sp.inner || sp.art, -E, -E, 2 * E, 2 * E);
   c.drawImage(sp.front, -E, -E, 2 * E, 2 * E);
   c.restore();
 }
@@ -735,9 +750,14 @@ function render() {
   }
 
   // 천체들
-  var ps = planets();
-  for (var i = 0; i < ps.length; i++) {
-    var b = ps[i], s = 1;   // 오래된 천체부터 그려서, 나중에 놓인 천체의 고리·홍염이 먼저 놓인 천체 위로 겹쳐 보인다
+  var ps = planets(), i, b, s, k;
+  for (i = 0; i < ps.length; i++) {   // 블랙홀의 바깥 원반은 맨 뒤에
+    b = ps[i]; if (!sprites[b.level].outer) continue;
+    s = 1; if (b.pop !== undefined) { k = (simTime - b.pop) / 220; if (k < 1) s = .55 + .45 * easeOutBack(k); }
+    drawOuter(ctx, b.level, b.position.x, b.position.y, s);
+  }
+  for (i = 0; i < ps.length; i++) {
+    b = ps[i]; s = 1;   // 오래된 천체부터 그려서, 나중에 놓인 천체의 고리·홍염이 먼저 놓인 천체 위로 겹쳐 보인다
     if (b.pop !== undefined) { var k = (simTime - b.pop) / 220; if (k < 1) s = .55 + .45 * easeOutBack(k); }
     drawBody(ctx, b.level, b.position.x, b.position.y, b.angle, s);
   }
