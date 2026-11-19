@@ -27,7 +27,7 @@ api/status.js         GET/POST 운영 상태 (단체명, 이번 최고 점수)
 api/score.js          POST 점수 기록
 api/hall.js           GET 역대 기록 / POST 전체 삭제
 api/game.js           운영 중일 때만 game/game.html 응답
-lib/store.js          저장 (Redis REST/REDIS_URL, 로컬은 파일)
+lib/store.js          저장 (Turso, 로컬은 파일)
 lib/auth.js           관리 번호 확인 + 5회 오입력 시 1분 잠금 (api/auth.js 가 번호 입력 화면에 응답)
 game/game.html        빌드된 게임 (Matter.js 포함 단일 파일, 커밋되어 있음)
 src/                  게임 템플릿과 클라이언트 스크립트
@@ -40,8 +40,9 @@ vercel.json           /game -> /api/game, game/** 를 함수에 포함
 
 1. 이 폴더 전체를 `ggaerok/nysc_game1` 에 올립니다. (`game/game.html` 포함)
 2. Vercel 에서 **Add New → Project** 로 저장소를 가져옵니다. 설정은 기본값 그대로 두면 됩니다.
-3. 프로젝트의 **Storage** 탭에서 Marketplace 의 **Redis** (또는 Upstash Redis) 를 만들어 이 프로젝트에 연결합니다.
-   Redis 는 `REDIS_URL`, Upstash 는 `KV_REST_API_URL`/`KV_REST_API_TOKEN` 환경변수가 자동으로 들어가며 둘 다 지원합니다.
+3. [Turso](https://turso.tech) 에서 도쿄(`aws-ap-northeast-1`) DB 를 만들고, Vercel 프로젝트의 **Settings → Environment Variables** 에 `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`(Sensitive) 을 넣습니다.
+   테이블은 처음 접속할 때 자동으로 만들어지며 이름이 `cosmos_` 로 시작하므로 Solar System(`solar_`)과 한 DB 를 같이 써도 됩니다.
+   함수 지역은 `vercel.json` 의 `regions: ["hnd1"]`(도쿄)로 DB 와 맞춰 둡니다.
 4. **Settings → Environment Variables** 에 `ADMIN_KEY` (예: 4자리 관리 번호)를 넣고 다시 배포하면, 관리 페이지에 들어갈 때 번호를 입력해야 설정을 바꿀 수 있습니다. 연속 5번 틀리면 1분간 입력이 잠깁니다. 번호는 코드에 적지 않고 이 환경변수에만 둡니다. (넣지 않으면 번호 없이 누구나 설정을 바꿀 수 있습니다.)
 5. **Redeploy** 합니다. 이후 `https://<프로젝트>.vercel.app/` 이 관리 페이지, `/play` 가 참가자용입니다.
 
